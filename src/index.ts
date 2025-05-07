@@ -27,8 +27,6 @@ app.listen(3000, () => {
   console.log('Server running on port 3000');
 });
 
-
-
 const verifyToken = (req: Request, res: Response, next: Function) => {
   const authHeader = req.headers['authorization'];
   
@@ -103,5 +101,87 @@ app.post('/login', async (req: Request, res: Response) => {
     });
   } catch (error) {
     res.status(500).send('Error logging in');
+  }
+});
+
+
+//   CREATE POST
+app.post('/posts', verifyToken, (req: Request, res: Response) => {
+  try {
+    const { content } = req.body;
+    const authorId = req.userId;
+    pool.query('INSERT INTO posts (content, authorId) VALUES (' + "'" + content + "', '" + authorId + "')", (error, results) => {
+      if (error) {
+        return res.status(500).send('Error creating post');
+      }
+      res.status(201).send('Post created successfully');
+    });
+  } catch (error) {
+    res.status(500).send('Error creating post');
+  }
+});
+
+
+// GET POSTS  
+app.get('/posts', (req: Request, res: Response) => {
+  try {
+    pool.query('SELECT * FROM posts', (error, results) => {
+      if (error) {
+        return res.status(500).send('Error fetching posts');
+      }
+      res.send(results);
+    });
+  } catch (error) {
+    res.status(500).send('Error fetching posts');
+  }
+});
+
+app.get('/posts/:id', (req: Request, res: Response) => {
+  try {
+    const postId = req.params.id;
+    pool.query('SELECT * FROM posts WHERE id = ' + postId, (error, results) => {
+      if (error) {
+        return res.status(500).send('Error fetching post');
+      }
+      res.send(results[0]);
+    });
+  } catch (error) {
+    res.status(500).send('Error fetching post');
+  }
+});
+
+  
+//   UPDATE POST
+app.put('/posts/:id', verifyToken, (req: Request, res: Response) => {
+  try {
+    const postId = req.params.id;
+    const { content } = req.body;
+    const authorId = req.userId;
+
+    pool.query('UPDATE posts SET content = ' + "'" + content + "'" + ' WHERE id = ' + postId + ' AND authorId = ' + authorId, (error, results) => {
+      if (error) {
+        return res.status(500).send('Error updating post');
+      }
+      res.send('Post updated successfully');
+    });
+  } catch (error) {
+    res.status(500).send('Error updating post');
+  }
+});
+
+//   DELETE POST
+app.delete('/posts/:id', verifyToken, (req: Request, res: Response) => {
+  try {
+    const postId = req.params.id;
+    const authorId = req.userId;
+
+    pool.query('DELETE FROM posts WHERE id = ' + postId + ' AND authorId = ' + authorId, (error, results) => {
+      if (error) {
+        return res.status(500).send('Error deleting post');
+      }
+      res.send('Post deleted successfully');
+    });
+  } catch (error) {
+    res.status(500).send('Error deleting post');
   }
 });

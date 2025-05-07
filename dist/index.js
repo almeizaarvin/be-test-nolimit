@@ -13,32 +13,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const db_1 = __importDefault(require("./db"));
-// INIT APP
+const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 const JWT_SECRET = 'SECRET';
-const verifyToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).send('Unauthorized');
-    }
-    const token = authHeader.slice(7);
-    try {
-        const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
-        if (!decoded || typeof decoded.id !== 'number') {
-            throw new Error('Invalid token');
-        }
-        req.userId = decoded.id.toString();
-        next();
-    }
-    catch (error) {
-        return res.status(403).send('Invalid token');
-    }
-};
-// USER MANAGEMENT
+app.get('/', (req, res) => {
+    res.send('Hello World');
+});
+app.listen(3000, () => {
+    console.log('Server running on port 3000');
+});
+// USER REGISTRATION
 app.post('/register', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { name, email, password } = req.body;
@@ -84,83 +71,3 @@ app.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         res.status(500).send('Error logging in');
     }
 }));
-// GET POSTS  
-app.get('/posts', (req, res) => {
-    try {
-        db_1.default.query('SELECT * FROM posts', (error, results) => {
-            if (error) {
-                return res.status(500).send('Error fetching posts');
-            }
-            res.send(results);
-        });
-    }
-    catch (error) {
-        res.status(500).send('Error fetching posts');
-    }
-});
-app.get('/posts/:id', (req, res) => {
-    try {
-        const postId = req.params.id;
-        db_1.default.query('SELECT * FROM posts WHERE id = ' + postId, (error, results) => {
-            if (error) {
-                return res.status(500).send('Error fetching post');
-            }
-            res.send(results[0]);
-        });
-    }
-    catch (error) {
-        res.status(500).send('Error fetching post');
-    }
-});
-//   CREATE POST
-app.post('/posts', verifyToken, (req, res) => {
-    try {
-        const { content } = req.body;
-        const authorId = req.userId;
-        db_1.default.query('INSERT INTO posts (content, authorId) VALUES (' + "'" + content + "', '" + authorId + "')", (error, results) => {
-            if (error) {
-                return res.status(500).send('Error creating post');
-            }
-            res.status(201).send('Post created successfully');
-        });
-    }
-    catch (error) {
-        res.status(500).send('Error creating post');
-    }
-});
-//   UPDATE POST
-app.put('/posts/:id', verifyToken, (req, res) => {
-    try {
-        const postId = req.params.id;
-        const { content } = req.body;
-        const authorId = req.userId;
-        db_1.default.query('UPDATE posts SET content = ' + "'" + content + "'" + ' WHERE id = ' + postId + ' AND authorId = ' + authorId, (error, results) => {
-            if (error) {
-                return res.status(500).send('Error updating post');
-            }
-            res.send('Post updated successfully');
-        });
-    }
-    catch (error) {
-        res.status(500).send('Error updating post');
-    }
-});
-//   DELETE POST
-app.delete('/posts/:id', verifyToken, (req, res) => {
-    try {
-        const postId = req.params.id;
-        const authorId = req.userId;
-        db_1.default.query('DELETE FROM posts WHERE id = ' + postId + ' AND authorId = ' + authorId, (error, results) => {
-            if (error) {
-                return res.status(500).send('Error deleting post');
-            }
-            res.send('Post deleted successfully');
-        });
-    }
-    catch (error) {
-        res.status(500).send('Error deleting post');
-    }
-});
-app.listen(3000, () => {
-    console.log('The application is listening on port 3000!');
-});

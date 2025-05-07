@@ -7,7 +7,7 @@ Simple application built with Node.js, Express.js, MySQL, JWT authentication, an
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/almeizaarvin/be-test-nolimit.git
-   cd test-be-nolimit
+   cd be-test-nolimit
 
 2. **Install dependencies:**
    ```bash

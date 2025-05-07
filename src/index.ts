@@ -10,6 +10,15 @@ app.use(express.json());
 const JWT_SECRET = 'SECRET';
 
 
+declare global {
+  namespace Express {
+    interface Request {
+      userId?: string;
+    }
+  }
+}
+
+//TEST
 app.get('/', (req, res) => {
   res.send('Hello World');
 });
@@ -17,6 +26,31 @@ app.get('/', (req, res) => {
 app.listen(3000, () => {
   console.log('Server running on port 3000');
 });
+
+
+
+const verifyToken = (req: Request, res: Response, next: Function) => {
+  const authHeader = req.headers['authorization'];
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).send('Unauthorized');
+  }
+
+
+  const token = authHeader.slice(7);
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
+    if (!decoded || typeof decoded.id !== 'number') {
+      throw new Error('Invalid token');
+    }
+
+    req.userId = decoded.id.toString();
+    next();
+
+  } catch (error) {
+    return res.status(403).send('Invalid token');
+  }
+};
 
 
 // USER REGISTRATION

@@ -19,12 +19,31 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 const JWT_SECRET = 'SECRET';
+//TEST
 app.get('/', (req, res) => {
     res.send('Hello World');
 });
 app.listen(3000, () => {
     console.log('Server running on port 3000');
 });
+const verifyToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).send('Unauthorized');
+    }
+    const token = authHeader.slice(7);
+    try {
+        const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
+        if (!decoded || typeof decoded.id !== 'number') {
+            throw new Error('Invalid token');
+        }
+        req.userId = decoded.id.toString();
+        next();
+    }
+    catch (error) {
+        return res.status(403).send('Invalid token');
+    }
+};
 // USER REGISTRATION
 app.post('/register', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

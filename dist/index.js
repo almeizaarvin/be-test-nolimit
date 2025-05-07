@@ -19,7 +19,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 const JWT_SECRET = 'SECRET';
-//TEST
+// TEST
 app.get('/', (req, res) => {
     res.send('Hello World');
 });
@@ -49,8 +49,8 @@ app.post('/register', (req, res) => __awaiter(void 0, void 0, void 0, function* 
     try {
         const { name, email, password } = req.body;
         const hashedPassword = yield bcryptjs_1.default.hash(password, 10);
-        const query = `INSERT INTO users (name, email, password) VALUES ('${name}', '${email}', '${hashedPassword}')`;
-        db_1.default.query(query, (error, results) => {
+        const query = `INSERT INTO users (name, email, password) VALUES (?, ?, ?)`;
+        db_1.default.query(query, [name, email, hashedPassword], (error, results) => {
             if (error) {
                 return res.status(500).send('Error registering user');
             }
@@ -61,11 +61,12 @@ app.post('/register', (req, res) => __awaiter(void 0, void 0, void 0, function* 
         res.status(500).send('Error registering user');
     }
 }));
+// USER LOGIN
 app.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, password } = req.body;
-        const query = `SELECT * FROM users WHERE email = '${email}'`;
-        db_1.default.query(query, (error, results) => __awaiter(void 0, void 0, void 0, function* () {
+        const query = `SELECT * FROM users WHERE email = ?`;
+        db_1.default.query(query, [email], (error, results) => __awaiter(void 0, void 0, void 0, function* () {
             if (error) {
                 return res.status(500).send('Error logging in');
             }
@@ -90,12 +91,13 @@ app.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         res.status(500).send('Error logging in');
     }
 }));
-//   CREATE POST
+// CREATE POST
 app.post('/posts', verifyToken, (req, res) => {
     try {
         const { content } = req.body;
         const authorId = req.userId;
-        db_1.default.query('INSERT INTO posts (content, authorId) VALUES (' + "'" + content + "', '" + authorId + "')", (error, results) => {
+        const query = `INSERT INTO posts (content, authorId) VALUES (?, ?)`;
+        db_1.default.query(query, [content, authorId], (error, results) => {
             if (error) {
                 return res.status(500).send('Error creating post');
             }
@@ -106,10 +108,11 @@ app.post('/posts', verifyToken, (req, res) => {
         res.status(500).send('Error creating post');
     }
 });
-// GET POSTS  
+// GET ALL POSTS
 app.get('/posts', (req, res) => {
     try {
-        db_1.default.query('SELECT * FROM posts', (error, results) => {
+        const query = `SELECT * FROM posts`;
+        db_1.default.query(query, (error, results) => {
             if (error) {
                 return res.status(500).send('Error fetching posts');
             }
@@ -120,10 +123,12 @@ app.get('/posts', (req, res) => {
         res.status(500).send('Error fetching posts');
     }
 });
+// GET POST BY ID
 app.get('/posts/:id', (req, res) => {
     try {
         const postId = req.params.id;
-        db_1.default.query('SELECT * FROM posts WHERE id = ' + postId, (error, results) => {
+        const query = `SELECT * FROM posts WHERE id = ?`;
+        db_1.default.query(query, [postId], (error, results) => {
             if (error) {
                 return res.status(500).send('Error fetching post');
             }
@@ -134,13 +139,14 @@ app.get('/posts/:id', (req, res) => {
         res.status(500).send('Error fetching post');
     }
 });
-//   UPDATE POST
+// UPDATE POST
 app.put('/posts/:id', verifyToken, (req, res) => {
     try {
         const postId = req.params.id;
         const { content } = req.body;
         const authorId = req.userId;
-        db_1.default.query('UPDATE posts SET content = ' + "'" + content + "'" + ' WHERE id = ' + postId + ' AND authorId = ' + authorId, (error, results) => {
+        const query = `UPDATE posts SET content = ? WHERE id = ? AND authorId = ?`;
+        db_1.default.query(query, [content, postId, authorId], (error, results) => {
             if (error) {
                 return res.status(500).send('Error updating post');
             }
@@ -151,12 +157,13 @@ app.put('/posts/:id', verifyToken, (req, res) => {
         res.status(500).send('Error updating post');
     }
 });
-//   DELETE POST
+// DELETE POST
 app.delete('/posts/:id', verifyToken, (req, res) => {
     try {
         const postId = req.params.id;
         const authorId = req.userId;
-        db_1.default.query('DELETE FROM posts WHERE id = ' + postId + ' AND authorId = ' + authorId, (error, results) => {
+        const query = `DELETE FROM posts WHERE id = ? AND authorId = ?`;
+        db_1.default.query(query, [postId, authorId], (error, results) => {
             if (error) {
                 return res.status(500).send('Error deleting post');
             }
